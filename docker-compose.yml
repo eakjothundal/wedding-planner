@@ -43,7 +43,7 @@ services:
     ports:
       - "${WP_DB_PORT}:5432"
     volumes:
-      - "wp_volume:/var/lib/postgresql/data:rw"
+      - "pgdata:/var/lib/postgresql/data"
     healthcheck:
       test:
         [
@@ -58,6 +58,6 @@ services:
       - wedding-planner
 
 volumes:
-  wp_volume:
+  pgdata: {}
 networks:
   wedding-planner:

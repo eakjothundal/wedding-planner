@@ -10,6 +10,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 
 	"wedding_planner/internal/database"
+	"wedding_planner/migrations"
 )
 
 type Server struct {
@@ -24,6 +25,11 @@ func NewServer() *http.Server {
 		port: port,
 
 		db: database.New(),
+	}
+
+	err := database.MigrateFS(NewServer.db, migrations.FS, ".")
+	if err != nil {
+		panic(err)
 	}
 
 	// Declare Server config
