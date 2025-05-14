@@ -10,17 +10,17 @@ services:
     environment:
       APP_ENV: ${APP_ENV}
       PORT: ${PORT}
-      BLUEPRINT_DB_HOST: ${BLUEPRINT_DB_HOST}
-      BLUEPRINT_DB_PORT: ${BLUEPRINT_DB_PORT}
-      BLUEPRINT_DB_DATABASE: ${BLUEPRINT_DB_DATABASE}
-      BLUEPRINT_DB_USERNAME: ${BLUEPRINT_DB_USERNAME}
-      BLUEPRINT_DB_PASSWORD: ${BLUEPRINT_DB_PASSWORD}
-      BLUEPRINT_DB_SCHEMA: ${BLUEPRINT_DB_SCHEMA}
+      WP_DB_HOST: ${WP_DB_HOST}
+      WP_DB_PORT: ${WP_DB_PORT}
+      WP_DB_DATABASE: ${WP_DB_DATABASE}
+      WP_DB_USERNAME: ${WP_DB_USERNAME}
+      WP_DB_PASSWORD: ${WP_DB_PASSWORD}
+      WP_DB_SCHEMA: ${WP_DB_SCHEMA}
     depends_on:
-      psql_bp:
+      wp_db:
         condition: service_healthy
     networks:
-      - blueprint
+      - wedding-planner
   frontend:
     build:
       context: .
@@ -32,28 +32,32 @@ services:
     ports:
       - 5173:5173
     networks:
-      - blueprint
-  psql_bp:
-    image: postgres:latest
+      - wedding-planner
+  wp_db:
+    image: postgres:12.4-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${BLUEPRINT_DB_DATABASE}
-      POSTGRES_USER: ${BLUEPRINT_DB_USERNAME}
-      POSTGRES_PASSWORD: ${BLUEPRINT_DB_PASSWORD}
+      POSTGRES_DB: ${WP_DB_DATABASE}
+      POSTGRES_USER: ${WP_DB_USERNAME}
+      POSTGRES_PASSWORD: ${WP_DB_PASSWORD}
     ports:
-      - "${BLUEPRINT_DB_PORT}:5432"
+      - "${WP_DB_PORT}:5432"
     volumes:
-      - psql_volume_bp:/var/lib/postgresql/data
+      - "wp_volume:/var/lib/postgresql/data:rw"
     healthcheck:
-      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${BLUEPRINT_DB_USERNAME} -d ${BLUEPRINT_DB_DATABASE}'"]
+      test:
+        [
+          "CMD-SHELL",
+          "sh -c 'pg_isready -U ${WP_DB_USERNAME} -d ${WP_DB_DATABASE}'",
+        ]
       interval: 5s
       timeout: 5s
       retries: 3
       start_period: 15s
     networks:
-      - blueprint
+      - wedding-planner
 
 volumes:
-  psql_volume_bp:
+  wp_volume:
 networks:
-  blueprint:
+  wedding-planner:
