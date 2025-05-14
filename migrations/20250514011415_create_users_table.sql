@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
     first_name    TEXT         NOT NULL,
     last_name     TEXT         NOT NULL,
     role          VARCHAR(20)  NOT NULL DEFAULT 'partner',
-    created_at    TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at    TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- +goose StatementEnd
