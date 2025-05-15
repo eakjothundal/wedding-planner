@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/pressly/goose/v3"
 )
 
 // Service represents a service that interacts with a database.
@@ -29,12 +31,12 @@ type service struct {
 }
 
 var (
-	database   = os.Getenv("BLUEPRINT_DB_DATABASE")
-	password   = os.Getenv("BLUEPRINT_DB_PASSWORD")
-	username   = os.Getenv("BLUEPRINT_DB_USERNAME")
-	port       = os.Getenv("BLUEPRINT_DB_PORT")
-	host       = os.Getenv("BLUEPRINT_DB_HOST")
-	schema     = os.Getenv("BLUEPRINT_DB_SCHEMA")
+	database   = os.Getenv("WP_DB_DATABASE")
+	password   = os.Getenv("WP_DB_PASSWORD")
+	username   = os.Getenv("WP_DB_USERNAME")
+	port       = os.Getenv("WP_DB_PORT")
+	host       = os.Getenv("WP_DB_HOST")
+	schema     = os.Getenv("WP_DB_SCHEMA")
 	dbInstance *service
 )
 
@@ -52,6 +54,34 @@ func New() Service {
 		db: db,
 	}
 	return dbInstance
+}
+
+func MigrateFS(s Service, migrationsFS fs.FS, dir string) error {
+	serv, ok := s.(*service)
+	if !ok {
+		return fmt.Errorf("MigrateFS: unable to extract *service from Service")
+	}
+	db := serv.db
+	goose.SetBaseFS(migrationsFS)
+	defer func() {
+		goose.SetBaseFS(nil)
+	}()
+
+	return Migrate(db, dir)
+}
+
+func Migrate(db *sql.DB, dir string) error {
+	err := goose.SetDialect("postgres")
+	if err != nil {
+		return fmt.Errorf("migrate: %w", err)
+	}
+
+	err = goose.Up(db, dir)
+	if err != nil {
+		return fmt.Errorf("goose up: %w", err)
+	}
+
+	return nil
 }
 
 // Health checks the health of the database connection by pinging the database.
